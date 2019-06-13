@@ -1,23 +1,35 @@
-public class Main {
-    public static void main(String args[]) {
-        String a[][] = new String[4][4];
-        try {
-            a[0][1] = "1";
-            a[1][0] = "2";
-            a[0][0] = "3";
-            a[1][1] = "4";
-            a[0][2] = "f";
-            a[1][2] = "6";
-            a[2][2] = "7";
-            a[2][1] = "8";
-            a[2][0] = "9";
-            a[4][4] = "10";
-            a[5][5] = "12";
-        } catch (ArrayIndexOutOfBoundsException d) {
-            System.out.println(d);
-        }
-        Massive massive = new Massive();
-        massive.summMass(a);
+import java.util.*;
 
+public class Main {
+    public static void main(String[] args) {
+
+        ArrayList<String> chisla = new ArrayList<>(20);
+        ArrayList<String> chislaTwo = new ArrayList<>(20);
+
+        chisla.add("один");
+        chisla.add("два");
+        chisla.add("три");
+        chisla.add("четыре");
+        chisla.add("пять");
+        chisla.add("один");
+        chisla.add("два");
+        chisla.add("шесть");
+        chisla.add("семь");
+        chisla.add("семь");
+        chisla.add("восемь");
+        chisla.add("девять");
+
+        for (String chislo: chisla){
+            if (!chislaTwo.contains(chislo)){
+                chislaTwo.add(chislo);
+            }
+        }
+        System.out.println(chislaTwo);
+
+
+        for (String chislo: chisla){
+            int count = Collections.frequency(chisla, chislo);
+            System.out.println(chislo + " " + count);
+        }
     }
 }
