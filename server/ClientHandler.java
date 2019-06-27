@@ -1,39 +1,76 @@
-package Lesson_6.server;
+package Lesson_6.Server;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Vector;
 
 public class ClientHandler {
-
-
-    private Socket socket;
     private DataInputStream in;
     private DataOutputStream out;
-    private Main server;
+    private DataOutputStream privateOut;
+    private Socket socket;
+    private MainServer server;
+    private String nick;
+    private String msg;
 
-    public ClientHandler(Socket socket, Main server) {
+    public ClientHandler(Socket socket, MainServer server) {
         try {
             this.socket = socket;
             this.server = server;
-            this.in = new DataInputStream(socket.getInputStream());
-            this.out = new DataOutputStream(socket.getOutputStream());
+            in = new DataInputStream(socket.getInputStream());
+            out = new DataOutputStream(socket.getOutputStream());
+            nick = null;
 
 
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
+                        // цикл для авторизации
                         while (true) {
                             String str = in.readUTF();
-                            if (str.equals("/end")) {
-                                clientExit();
-                                break;
+                            // если сообщение начинается с /auth
+                            if(str.startsWith("/auth")) {
+                                String[] tokens = str.split(" ");
+                                // Вытаскиваем данные из БД
+                                String newNick = AuthService.getNickByLoginAndPass(tokens[1], tokens[2]);
+                                if (newNick != null) {
+                                    // отправляем сообщение об успешной авторизации
+                                    if (!server.isNickBusy(newNick)) {
+                                        sendMsg("/authok");
+                                    nick = newNick;
+                                    server.subscribe(ClientHandler.this);
+                                    break; }
+                                } else {
+                                    sendMsg("Неверный логин/пароль!");
+                                }
                             }
-                            server.broadCastMsg(str);
                         }
-                    } catch (IOException e) {
+
+                        // блок для отправки сообщений
+                        while (true) {
+                            String str = in.readUTF();
+                            if(str.equals("/end")) {
+                                out.writeUTF("/serverClosed");
+                                break; }
+                            if (str.equals("/private")) {
+                                out.writeUTF("введите ник");
+                                String nick = in.readUTF();
+                                out.writeUTF("Введите сообщение");
+                                String msg = in.readUTF();
+                                server.privateMsg(nick, msg);
+                            } else {
+                            server.broadcastMsg(nick + ": " + str); }
+                        }
+
+
+                    }  catch (IOException e) {
                         e.printStackTrace();
                     } finally {
                         try {
@@ -51,6 +88,7 @@ public class ClientHandler {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
+                        server.unsubscribe(ClientHandler.this);
                     }
                 }
             }).start();
@@ -68,28 +106,20 @@ public class ClientHandler {
         }
     }
 
-    public void clientExit() {
+    public void privateMsg(String msg, DataOutputStream pm) {
         try {
-            in.close();
+            pm.writeUTF(msg);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        try {
-            out.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        try {
-            socket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        try {
-            server.removeClient(this);
-            System.out.println("Клиент отключился");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    }
 
+
+    public String getNick(){
+        return nick;
+    }
+
+    public DataOutputStream getOut() {
+        return this.out;
     }
 }

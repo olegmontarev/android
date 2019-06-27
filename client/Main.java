@@ -1,4 +1,4 @@
-package Lesson_6.client;
+package Lesson_6.Client;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -11,8 +11,8 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception{
         Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
-        primaryStage.setTitle("Chat 2k19");
-        Scene scene = new Scene(root, 310, 350);
+        primaryStage.setTitle("Hello World");
+        Scene scene = new Scene(root, 370, 370);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
